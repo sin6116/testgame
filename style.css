@@ -13,6 +13,23 @@ body {
     overflow: hidden;
 }
 
+/* Timer */
+#timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+    z-index: 1000;
+    min-width: 100px;
+    text-align: center;
+}
+
 #game-container {
     position: relative;
     width: 100vw;
@@ -78,6 +95,14 @@ body {
 
 #game-over p {
     font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#final-time {
+    font-size: 1.8rem;
+    color: #67ea67;
+    font-weight: bold;
     margin-bottom: 2rem;
 }
 
@@ -116,6 +141,13 @@ body {
 
 /* Styles responsifs */
 @media (max-width: 768px) {
+    #timer {
+        font-size: 1.5rem;
+        top: 10px;
+        right: 10px;
+        padding: 8px 15px;
+    }
+    
     #custom-cursor {
         width: 15px;
         height: 15px;
@@ -128,5 +160,9 @@ body {
     
     #game-over h1 {
         font-size: 2.5rem;
+    }
+    
+    #final-time {
+        font-size: 1.4rem;
     }
 }
