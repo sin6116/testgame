@@ -6,13 +6,14 @@ const restartBtn = document.getElementById('restart-btn');
 const timerElement = document.getElementById('timer');
 const finalTimeSpan = document.querySelector('#final-time span');
 
-let mouseX = 0;
-let mouseY = 0;
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
 let saws = [];
 let gameRunning = true;
 let animationId;
 let startTime = 0;
 let timerInterval;
+let isPointerLocked = false;
 
 // Classe pour les scies
 class Saw {
@@ -155,6 +156,34 @@ class Saw {
     }
 }
 
+// Fonction pour verrouiller le pointeur
+function lockPointer() {
+    document.body.requestPointerLock = document.body.requestPointerLock ||
+                                       document.body.mozRequestPointerLock ||
+                                       document.body.webkitRequestPointerLock;
+    
+    if (document.body.requestPointerLock) {
+        document.body.requestPointerLock();
+    }
+}
+
+// Fonction pour gérer les événements de verrouillage du pointeur
+function handlePointerLockChange() {
+    isPointerLocked = document.pointerLockElement === document.body ||
+                      document.mozPointerLockElement === document.body ||
+                      document.webkitPointerLockElement === document.body;
+    
+    if (!isPointerLocked && gameRunning) {
+        // Si le joueur sort du mode pointer lock pendant le jeu, on remet le jeu en pause
+        // et on redemande le verrouillage
+        setTimeout(() => {
+            if (gameRunning) {
+                lockPointer();
+            }
+        }, 100);
+    }
+}
+
 // Fonction pour formater le temps en MM:SS
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
@@ -188,8 +217,19 @@ function getCurrentTime() {
 
 // Fonction pour déplacer le curseur personnalisé
 function moveCursor(e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
+    if (isPointerLocked) {
+        // Utiliser movementX et movementY pour les mouvements relatifs
+        mouseX += e.movementX || 0;
+        mouseY += e.movementY || 0;
+        
+        // Empêcher la souris de sortir de l'écran
+        mouseX = Math.max(10, Math.min(mouseX, window.innerWidth - 10));
+        mouseY = Math.max(10, Math.min(mouseY, window.innerHeight - 10));
+    } else {
+        // Mode normal (pour les menus)
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    }
     
     cursor.style.left = mouseX + 'px';
     cursor.style.top = mouseY + 'px';
@@ -227,6 +267,11 @@ function gameOver() {
     gameRunning = false;
     stopTimer();
     
+    // Libérer le pointeur
+    if (document.exitPointerLock) {
+        document.exitPointerLock();
+    }
+    
     // Afficher le temps final
     const finalTime = getCurrentTime();
     finalTimeSpan.textContent = formatTime(finalTime);
@@ -247,8 +292,17 @@ function restartGame() {
     saws.forEach(saw => saw.destroy());
     saws = [];
     
+    // Remettre la souris au centre
+    mouseX = window.innerWidth / 2;
+    mouseY = window.innerHeight / 2;
+    cursor.style.left = mouseX + 'px';
+    cursor.style.top = mouseY + 'px';
+    
     // Recréer les scies
     createSaws();
+    
+    // Verrouiller le pointeur
+    lockPointer();
     
     // Redémarrer le timer
     startTimer();
@@ -259,6 +313,9 @@ function restartGame() {
 
 // Écouteurs d'événements
 document.addEventListener('mousemove', moveCursor);
+document.addEventListener('pointerlockchange', handlePointerLockChange);
+document.addEventListener('mozpointerlockchange', handlePointerLockChange);
+document.addEventListener('webkitpointerlockchange', handlePointerLockChange);
 restartBtn.addEventListener('click', restartGame);
 
 // Gestion de la visibilité du curseur
@@ -267,16 +324,27 @@ document.addEventListener('mouseenter', () => {
 });
 
 document.addEventListener('mouseleave', () => {
-    cursor.style.opacity = '0';
+    if (!isPointerLocked) {
+        cursor.style.opacity = '0';
+    }
+});
+
+// Démarrer le jeu au clic
+document.addEventListener('click', () => {
+    if (!isPointerLocked && gameRunning) {
+        lockPointer();
+    }
 });
 
 // Initialisation du jeu
 window.addEventListener('load', () => {
     cursor.style.opacity = '1';
     createSaws();
-    startTimer();
-    gameLoop();
-    console.log('Jeu de scies avec collisions entre scies démarré !');
+    
+    // Afficher un message pour commencer
+    setTimeout(() => {
+        alert('Cliquez n\'importe où pour commencer le jeu et verrouiller la souris !');
+    }, 500);
 });
 
 // Adapter la taille lors du redimensionnement de la fenêtre
@@ -291,4 +359,10 @@ window.addEventListener('resize', () => {
         }
         saw.updatePosition();
     });
+    
+    // Ajuster la position de la souris si elle est hors limites
+    mouseX = Math.max(10, Math.min(mouseX, window.innerWidth - 10));
+    mouseY = Math.max(10, Math.min(mouseY, window.innerHeight - 10));
+    cursor.style.left = mouseX + 'px';
+    cursor.style.top = mouseY + 'px';
 });
