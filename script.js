@@ -1,6 +1,5 @@
 // Variables globales
 const cursor = document.getElementById('custom-cursor');
-const gameArea = document.getElementById('game-area');
 let mouseX = 0;
 let mouseY = 0;
 
@@ -14,24 +13,11 @@ function moveCursor(e) {
     cursor.style.top = mouseY + 'px';
 }
 
-// Fonction pour l'effet de survol
-function handleHover(e) {
-    // Vérifier si la souris survole la zone de jeu
-    const rect = gameArea.getBoundingClientRect();
-    const isInGameArea = (
-        mouseX >= rect.left &&
-        mouseX <= rect.right &&
-        mouseY >= rect.top &&
-        mouseY <= rect.bottom
-    );
-    
-    if (isInGameArea) {
-        cursor.classList.add('hover');
-        cursor.classList.add('pulse');
-    } else {
-        cursor.classList.remove('hover');
-        cursor.classList.remove('pulse');
-    }
+// Fonction pour appliquer les effets sur tout l'écran
+function applyGlobalEffects() {
+    // Appliquer les effets de survol et pulsation sur tout l'écran
+    cursor.classList.add('hover');
+    cursor.classList.add('pulse');
 }
 
 // Effet lors du clic
@@ -45,7 +31,7 @@ function handleClick() {
 // Écouteurs d'événements
 document.addEventListener('mousemove', (e) => {
     moveCursor(e);
-    handleHover(e);
+    applyGlobalEffects();
 });
 
 document.addEventListener('click', handleClick);
@@ -53,12 +39,14 @@ document.addEventListener('click', handleClick);
 // Animation de démarrage
 window.addEventListener('load', () => {
     cursor.style.opacity = '1';
-    console.log('Jeu web initialisé avec succès !');
+    applyGlobalEffects(); // Activer les effets dès le chargement
+    console.log('Jeu web initialisé avec succès - Curseur actif sur tout l\'\u00e9cran !');
 });
 
 // Fonction pour masquer/afficher le curseur quand la souris sort/entre dans la fenêtre
 document.addEventListener('mouseenter', () => {
     cursor.style.opacity = '1';
+    applyGlobalEffects();
 });
 
 document.addEventListener('mouseleave', () => {
