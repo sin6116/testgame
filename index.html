@@ -7,11 +7,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Overlay de démarrage -->
+    <div id="startOverlay">
+        <div class="start-box">
+            <h2>Clique pour jouer</h2>
+            <p>La souris sera verrouillée dans l'écran. Évite les scies !</p>
+        </div>
+    </div>
+    
     <!-- Timer -->
     <div id="timer">00:00</div>
     
     <!-- Zone de jeu -->
     <div id="game-container">
+        <!-- UI d'habillage rétro -->
+        <div id="frame-ui" aria-hidden="true">
+            <div id="blood"></div>
+            <div id="score">00:00</div>
+            <div id="hud">
+                <div id="gauge">
+                    <span class="fill y"></span>
+                    <span class="fill r"></span>
+                </div>
+                <div id="coins">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <span id="coinsValue">41</span>
+                </div>
+            </div>
+        </div>
         <!-- Les scies seront ajoutées ici dynamiquement -->
     </div>
     
