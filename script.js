@@ -20,9 +20,11 @@ class Saw {
         this.element = document.createElement('div');
         this.element.className = 'saw';
         
-        // Position aléatoire
-        this.x = Math.random() * (window.innerWidth - 50);
-        this.y = Math.random() * (window.innerHeight - 50);
+        // Position aléatoire (éviter les chevauchements initiaux)
+        do {
+            this.x = Math.random() * (window.innerWidth - 50);
+            this.y = Math.random() * (window.innerHeight - 50);
+        } while (this.isOverlapping());
         
         // Vitesse aléatoire
         this.speedX = (Math.random() - 0.5) * 6;
@@ -33,9 +35,20 @@ class Saw {
         if (Math.abs(this.speedY) < 2) this.speedY = this.speedY > 0 ? 2 : -2;
         
         this.size = 50;
+        this.radius = this.size / 2;
         
         this.updatePosition();
         gameContainer.appendChild(this.element);
+    }
+    
+    isOverlapping() {
+        for (let saw of saws) {
+            const distance = Math.sqrt((this.x - saw.x) ** 2 + (this.y - saw.y) ** 2);
+            if (distance < this.size) {
+                return true;
+            }
+        }
+        return false;
     }
     
     updatePosition() {
@@ -44,28 +57,95 @@ class Saw {
     }
     
     move() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        // Calculer la nouvelle position
+        let newX = this.x + this.speedX;
+        let newY = this.y + this.speedY;
         
         // Rebondir sur les bords
-        if (this.x <= 0 || this.x >= window.innerWidth - this.size) {
+        if (newX <= 0 || newX >= window.innerWidth - this.size) {
             this.speedX = -this.speedX;
-            this.x = Math.max(0, Math.min(this.x, window.innerWidth - this.size));
+            newX = Math.max(0, Math.min(newX, window.innerWidth - this.size));
         }
         
-        if (this.y <= 0 || this.y >= window.innerHeight - this.size) {
+        if (newY <= 0 || newY >= window.innerHeight - this.size) {
             this.speedY = -this.speedY;
-            this.y = Math.max(0, Math.min(this.y, window.innerHeight - this.size));
+            newY = Math.max(0, Math.min(newY, window.innerHeight - this.size));
         }
         
+        // Vérifier les collisions avec les autres scies
+        this.checkSawCollisions(newX, newY);
+        
+        // Mettre à jour la position
+        this.x = newX;
+        this.y = newY;
         this.updatePosition();
     }
     
-    checkCollision(mouseX, mouseY) {
-        const centerX = this.x + this.size / 2;
-        const centerY = this.y + this.size / 2;
+    checkSawCollisions(newX, newY) {
+        for (let otherSaw of saws) {
+            if (otherSaw === this) continue;
+            
+            // Calculer la distance entre les centres
+            const centerX1 = newX + this.radius;
+            const centerY1 = newY + this.radius;
+            const centerX2 = otherSaw.x + otherSaw.radius;
+            const centerY2 = otherSaw.y + otherSaw.radius;
+            
+            const distance = Math.sqrt((centerX1 - centerX2) ** 2 + (centerY1 - centerY2) ** 2);
+            const minDistance = this.radius + otherSaw.radius;
+            
+            // Si collision détectée
+            if (distance < minDistance) {
+                // Calculer l'angle de collision
+                const angle = Math.atan2(centerY2 - centerY1, centerX2 - centerX1);
+                
+                // Séparer les scies pour éviter qu'elles restent collées
+                const overlap = minDistance - distance;
+                const separationX = Math.cos(angle) * overlap * 0.5;
+                const separationY = Math.sin(angle) * overlap * 0.5;
+                
+                this.x -= separationX;
+                this.y -= separationY;
+                otherSaw.x += separationX;
+                otherSaw.y += separationY;
+                
+                // Calculer les nouvelles vitesses après collision (collision élastique)
+                const relativeSpeedX = this.speedX - otherSaw.speedX;
+                const relativeSpeedY = this.speedY - otherSaw.speedY;
+                
+                const normalX = Math.cos(angle);
+                const normalY = Math.sin(angle);
+                
+                const relativeSpeed = relativeSpeedX * normalX + relativeSpeedY * normalY;
+                
+                if (relativeSpeed > 0) continue; // Les objets s'éloignent déjà
+                
+                // Échanger les composantes de vitesse dans la direction normale
+                this.speedX -= relativeSpeed * normalX;
+                this.speedY -= relativeSpeed * normalY;
+                otherSaw.speedX += relativeSpeed * normalX;
+                otherSaw.speedY += relativeSpeed * normalY;
+                
+                // Ajouter un peu d'amortissement pour éviter les oscillations
+                this.speedX *= 0.95;
+                this.speedY *= 0.95;
+                otherSaw.speedX *= 0.95;
+                otherSaw.speedY *= 0.95;
+                
+                // Assurer une vitesse minimale
+                if (Math.abs(this.speedX) < 1) this.speedX = this.speedX > 0 ? 1 : -1;
+                if (Math.abs(this.speedY) < 1) this.speedY = this.speedY > 0 ? 1 : -1;
+                if (Math.abs(otherSaw.speedX) < 1) otherSaw.speedX = otherSaw.speedX > 0 ? 1 : -1;
+                if (Math.abs(otherSaw.speedY) < 1) otherSaw.speedY = otherSaw.speedY > 0 ? 1 : -1;
+            }
+        }
+    }
+    
+    checkPlayerCollision(mouseX, mouseY) {
+        const centerX = this.x + this.radius;
+        const centerY = this.y + this.radius;
         const distance = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
-        return distance < (this.size / 2 + 10); // 10 = rayon du curseur
+        return distance < (this.radius + 10); // 10 = rayon du curseur
     }
     
     destroy() {
@@ -132,8 +212,8 @@ function gameLoop() {
     saws.forEach(saw => {
         saw.move();
         
-        // Vérifier les collisions
-        if (saw.checkCollision(mouseX, mouseY)) {
+        // Vérifier les collisions avec le joueur
+        if (saw.checkPlayerCollision(mouseX, mouseY)) {
             gameOver();
             return;
         }
@@ -196,7 +276,7 @@ window.addEventListener('load', () => {
     createSaws();
     startTimer();
     gameLoop();
-    console.log('Jeu de scies avec timer démarré !');
+    console.log('Jeu de scies avec collisions entre scies démarré !');
 });
 
 // Adapter la taille lors du redimensionnement de la fenêtre
