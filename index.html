@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Timer -->
+    <div id="timer">00:00</div>
+    
     <!-- Zone de jeu -->
     <div id="game-container">
         <!-- Les scies seront ajoutées ici dynamiquement -->
@@ -16,6 +19,7 @@
     <div id="game-over" class="hidden">
         <h1>GAME OVER</h1>
         <p>Tu as touché une scie !</p>
+        <p id="final-time">Temps de survie: <span>00:00</span></p>
         <button id="restart-btn">Recommencer</button>
     </div>
     
