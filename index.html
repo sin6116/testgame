@@ -3,52 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Jeu Web - Évite les Scies</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Minecraft Three.js</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #87CEEB;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: white;
+        }
+        
+        #crosshair::before {
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        #crosshair::after {
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+        
+        #inventory {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .inventory-slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #666;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            cursor: pointer;
+            background: rgba(139, 69, 19, 0.3);
+        }
+        
+        .inventory-slot.active {
+            border-color: white;
+            background: rgba(139, 69, 19, 0.7);
+        }
+        
+        .inventory-slot.dirt { background: rgba(139, 69, 19, 0.7); }
+        .inventory-slot.grass { background: rgba(34, 139, 34, 0.7); }
+        .inventory-slot.stone { background: rgba(128, 128, 128, 0.7); }
+        .inventory-slot.sand { background: rgba(238, 203, 173, 0.7); }
+        .inventory-slot.water { background: rgba(0, 191, 255, 0.7); }
+    </style>
 </head>
 <body>
-    <!-- Overlay de démarrage -->
-    <div id="startOverlay">
-        <div class="start-box">
-            <h2>Clique pour jouer</h2>
-            <p>La souris sera verrouillée dans l'écran. Évite les scies !</p>
-        </div>
+    <div id="ui">
+        <div>WASD: Déplacer</div>
+        <div>Souris: Regarder</div>
+        <div>Clic gauche: Casser</div>
+        <div>Clic droit: Placer</div>
+        <div>1-5: Changer de bloc</div>
+        <div>Espace: Monter / Nager</div>
+        <div>Shift: Descendre</div>
     </div>
     
-    <!-- Timer -->
-    <div id="timer">00:00</div>
+    <div id="crosshair"></div>
     
-    <!-- Zone de jeu -->
-    <div id="game-container">
-        <!-- UI d'habillage rétro -->
-        <div id="frame-ui" aria-hidden="true">
-            <div id="blood"></div>
-            <div id="score">00:00</div>
-            <div id="hud">
-                <div id="gauge">
-                    <span class="fill y"></span>
-                    <span class="fill r"></span>
-                </div>
-                <div id="coins">
-                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-                    <span id="coinsValue">41</span>
-                </div>
-            </div>
-        </div>
-        <!-- Les scies seront ajoutées ici dynamiquement -->
+    <div id="inventory">
+        <div class="inventory-slot dirt active" data-block="dirt">TERRE</div>
+        <div class="inventory-slot grass" data-block="grass">HERBE</div>
+        <div class="inventory-slot stone" data-block="stone">PIERRE</div>
+        <div class="inventory-slot sand" data-block="sand">SABLE</div>
+        <div class="inventory-slot water" data-block="water">EAU</div>
     </div>
     
-    <!-- Écran de fin de partie -->
-    <div id="game-over" class="hidden">
-        <h1>GAME OVER</h1>
-        <p>Tu as touché une scie !</p>
-        <p id="final-time">Temps de survie: <span>00:00</span></p>
-        <button id="restart-btn">Recommencer</button>
-    </div>
-    
-    <!-- Curseur personnalisé -->
-    <div id="custom-cursor"></div>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
