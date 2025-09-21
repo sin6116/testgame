@@ -3,12 +3,16 @@ const cursor = document.getElementById('custom-cursor');
 const gameContainer = document.getElementById('game-container');
 const gameOverScreen = document.getElementById('game-over');
 const restartBtn = document.getElementById('restart-btn');
+const timerElement = document.getElementById('timer');
+const finalTimeSpan = document.querySelector('#final-time span');
 
 let mouseX = 0;
 let mouseY = 0;
 let saws = [];
 let gameRunning = true;
 let animationId;
+let startTime = 0;
+let timerInterval;
 
 // Classe pour les scies
 class Saw {
@@ -71,6 +75,37 @@ class Saw {
     }
 }
 
+// Fonction pour formater le temps en MM:SS
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+// Fonction pour démarrer le timer
+function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        if (gameRunning) {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            timerElement.textContent = formatTime(elapsedTime);
+        }
+    }, 1000);
+}
+
+// Fonction pour arrêter le timer
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// Fonction pour obtenir le temps actuel
+function getCurrentTime() {
+    return Math.floor((Date.now() - startTime) / 1000);
+}
+
 // Fonction pour déplacer le curseur personnalisé
 function moveCursor(e) {
     mouseX = e.clientX;
@@ -110,6 +145,12 @@ function gameLoop() {
 // Fonction de fin de partie
 function gameOver() {
     gameRunning = false;
+    stopTimer();
+    
+    // Afficher le temps final
+    const finalTime = getCurrentTime();
+    finalTimeSpan.textContent = formatTime(finalTime);
+    
     gameOverScreen.classList.remove('hidden');
     cancelAnimationFrame(animationId);
 }
@@ -119,12 +160,18 @@ function restartGame() {
     gameRunning = true;
     gameOverScreen.classList.add('hidden');
     
+    // Remettre le timer à zéro
+    timerElement.textContent = '00:00';
+    
     // Supprimer toutes les scies existantes
     saws.forEach(saw => saw.destroy());
     saws = [];
     
     // Recréer les scies
     createSaws();
+    
+    // Redémarrer le timer
+    startTimer();
     
     // Relancer la boucle de jeu
     gameLoop();
@@ -147,8 +194,9 @@ document.addEventListener('mouseleave', () => {
 window.addEventListener('load', () => {
     cursor.style.opacity = '1';
     createSaws();
+    startTimer();
     gameLoop();
-    console.log('Jeu de scies démarré !');
+    console.log('Jeu de scies avec timer démarré !');
 });
 
 // Adapter la taille lors du redimensionnement de la fenêtre
